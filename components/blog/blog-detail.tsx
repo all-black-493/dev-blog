@@ -28,12 +28,12 @@ export function BlogDetail({ post }: BlogDetailProps) {
 
     // Animate content sections
     const sections = content.querySelectorAll('h1, h2, h3, p, pre, ul, ol');
-    
+
     gsap.fromTo(sections,
       { opacity: 0, y: 20 },
-      { 
-        opacity: 1, 
-        y: 0, 
+      {
+        opacity: 1,
+        y: 0,
         duration: 0.6,
         stagger: 0.05,
         ease: "power2.out",
@@ -55,7 +55,7 @@ export function BlogDetail({ post }: BlogDetailProps) {
           Back to posts
         </Link>
       </Button>
-      
+
       {/* Admin Actions */}
       <div className="flex justify-end mb-4">
         <Button
@@ -76,7 +76,7 @@ export function BlogDetail({ post }: BlogDetailProps) {
         <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
           {post.title}
         </h1>
-        
+
         <div className="flex items-center gap-6 text-gray-300 mb-6">
           <span className="flex items-center gap-2">
             <Calendar size={16} />
@@ -97,7 +97,7 @@ export function BlogDetail({ post }: BlogDetailProps) {
         <div className="flex items-center flex-wrap gap-2 mb-8">
           <Tag size={16} className="text-green-400" />
           {post.tags.map((tag) => (
-            <Badge 
+            <Badge
               key={tag}
               variant="secondary"
               className="bg-green-500/20 text-green-300 hover:bg-green-500/30 border-green-500/30"
@@ -109,7 +109,7 @@ export function BlogDetail({ post }: BlogDetailProps) {
       </header>
 
       {/* Content */}
-      <div 
+      <div
         ref={contentRef}
         className="prose prose-invert prose-purple max-w-none"
       >
@@ -137,61 +137,63 @@ export function BlogDetail({ post }: BlogDetailProps) {
                 {children}
               </p>
             ),
-            code: ({ inline, className, children }) => {
+            code(props) {
+              const { inline, className, children, ...rest } = props as any;
               if (inline) {
                 return (
-                  <code className="bg-green-900/30 text-green-300 px-2 py-1 rounded text-sm">
+                  <code className="bg-green-900/30 text-green-300 px-2 py-1 rounded text-sm" {...rest}>
                     {children}
                   </code>
                 );
               }
               return (
-                <code className={cn("block", className)}>
+                <code className={cn("block", className)} {...rest}>
                   {children}
                 </code>
               );
             },
-            pre: ({ children }) => (
-              <pre className="bg-gray-900 border border-green-500/20 rounded-lg p-4 overflow-x-auto mb-6">
-                {children}
-              </pre>
-            ),
-            ul: ({ children }) => (
-              <ul className="text-gray-300 mb-4 ml-6 space-y-2">
-                {children}
-              </ul>
-            ),
-            ol: ({ children }) => (
-              <ol className="text-gray-300 mb-4 ml-6 space-y-2">
-                {children}
-              </ol>
-            ),
-            li: ({ children }) => (
-              <li className="list-disc">
-                {children}
-              </li>
-            ),
-            blockquote: ({ children }) => (
-              <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-300 mb-4">
-                {children}
-              </blockquote>
-            ),
-            strong: ({ children }) => (
-              <strong className="text-white font-semibold">
-                {children}
-              </strong>
-            ),
+
+            pre: ({children}) => (
+        <pre className="bg-gray-900 border border-green-500/20 rounded-lg p-4 overflow-x-auto mb-6">
+          {children}
+        </pre>
+        ),
+        ul: ({children}) => (
+        <ul className="text-gray-300 mb-4 ml-6 space-y-2">
+          {children}
+        </ul>
+        ),
+        ol: ({children}) => (
+        <ol className="text-gray-300 mb-4 ml-6 space-y-2">
+          {children}
+        </ol>
+        ),
+        li: ({children}) => (
+        <li className="list-disc">
+          {children}
+        </li>
+        ),
+        blockquote: ({children}) => (
+        <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-300 mb-4">
+          {children}
+        </blockquote>
+        ),
+        strong: ({children}) => (
+        <strong className="text-white font-semibold">
+          {children}
+        </strong>
+        ),
           }}
         >
-          {post.content}
-        </ReactMarkdown>
-      </div>
+        {post.content}
+      </ReactMarkdown>
+    </div>
       
-      {/* Engagement Section */}
-      <PostEngagement post={post} />
-      
-      {/* Comments Section */}
-      <CommentSection post={post} />
-    </article>
+      {/* Engagement Section */ }
+  <PostEngagement post={post} />
+
+  {/* Comments Section */ }
+  <CommentSection post={post} />
+    </article >
   );
 }
