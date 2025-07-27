@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BlogPost, likePost, dislikePost } from '@/lib/blog-data';
+import { BlogPost, likePost, dislikePost } from '@/lib/client-actions/blog-data';
 import { cn } from '@/lib/utils';
 
 interface PostEngagementProps {
@@ -17,11 +17,11 @@ export function PostEngagement({ post }: PostEngagementProps) {
 
   const handleLike = async () => {
     if (userAction === 'like') return;
-    
+
     if (userAction === 'dislike') {
       setDislikes(prev => prev - 1);
     }
-    
+
     setLikes(prev => prev + 1);
     setUserAction('like');
     await likePost(post.id);
@@ -29,11 +29,11 @@ export function PostEngagement({ post }: PostEngagementProps) {
 
   const handleDislike = async () => {
     if (userAction === 'dislike') return;
-    
+
     if (userAction === 'like') {
       setLikes(prev => prev - 1);
     }
-    
+
     setDislikes(prev => prev + 1);
     setUserAction('dislike');
     await dislikePost(post.id);
@@ -68,7 +68,7 @@ export function PostEngagement({ post }: PostEngagementProps) {
             <ThumbsUp size={18} />
             {likes}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -82,7 +82,7 @@ export function PostEngagement({ post }: PostEngagementProps) {
             {dislikes}
           </Button>
         </div>
-        
+
         <Button
           variant="ghost"
           size="sm"

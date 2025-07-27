@@ -6,20 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { BlogPost, Comment, addComment } from '@/lib/blog-data';
-
+import { BlogPost, Comment } from '@/types/types';
+import { addComment } from '@/lib/client-actions/comments/add-comment';
 interface CommentSectionProps {
   post: BlogPost;
 }
 
 export function CommentSection({ post }: CommentSectionProps) {
-  const [comments, setComments] = useState(post.comments);
+  const [comments, setComments] = useState<Comment[]>(post.comments || []);
   const [newComment, setNewComment] = useState({ author: '', email: '', content: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.author || !newComment.email || !newComment.content) return;
+    const { author, email, content } = newComment;
+    if (!author || !email || !content) return;
 
     setIsSubmitting(true);
     try {
@@ -100,7 +101,7 @@ export function CommentSection({ post }: CommentSectionProps) {
                     {new Date(comment.date).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric'
+                      day: 'numeric',
                     })}
                   </p>
                 </div>
@@ -111,7 +112,7 @@ export function CommentSection({ post }: CommentSectionProps) {
             </CardContent>
           </Card>
         ))}
-        
+
         {comments.length === 0 && (
           <div className="text-center py-8">
             <MessageCircle size={48} className="text-gray-600 mx-auto mb-4" />

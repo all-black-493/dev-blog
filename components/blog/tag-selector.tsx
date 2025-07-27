@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getAllTags } from '@/lib/blog-data';
+import { getAllTags } from '@/lib/client-actions/blog-data';
 import { gsap } from 'gsap';
 import { cn } from '@/lib/utils';
 
@@ -16,21 +16,30 @@ interface TagSelectorProps {
   onSearchChange: (query: string) => void;
 }
 
-export function TagSelector({ 
-  selectedTags, 
-  onTagsChange, 
-  searchQuery, 
-  onSearchChange 
+export function TagSelector({
+  selectedTags,
+  onTagsChange,
+  searchQuery,
+  onSearchChange
 }: TagSelectorProps) {
-  const [allTags] = useState(getAllTags());
+  const [allTags, setAllTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function loadTags() {
+      const tags = await getAllTags();
+      setAllTags(tags || []);
+    }
+
+    loadTags();
+  }, []);
 
   useEffect(() => {
     // Animate tag cloud
     gsap.fromTo('.tag-item',
       { opacity: 0, scale: 0.8 },
-      { 
-        opacity: 1, 
-        scale: 1, 
+      {
+        opacity: 1,
+        scale: 1,
         duration: 0.4,
         stagger: 0.05,
         ease: "back.out(1.7)"

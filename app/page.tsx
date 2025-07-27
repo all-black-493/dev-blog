@@ -1,46 +1,50 @@
-"use client";
+"use client"
+import { useState, useEffect } from 'react'
+import { gsap } from 'gsap'
+import { BlogCard } from '@/components/blog/blog-card'
+import { TagSelector } from '@/components/blog/tag-selector'
+import { BlogPost } from '@/types/types'
 
-import { useState, useEffect } from 'react';
-import { BlogCard } from '@/components/blog/blog-card';
-import { TagSelector } from '@/components/blog/tag-selector';
-import { blogPostsMetadata, searchPosts, getPostsByTag, getFeaturedPosts } from '@/lib/blog-data';
-import { gsap } from 'gsap';
+type Props = {
+  allPosts?: BlogPost[]
+  featuredPosts?: BlogPost[]
+}
 
-export default function Home() {
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPosts, setFilteredPosts] = useState(blogPostsMetadata);
-  const [featuredPosts, setFeaturedPosts] = useState(getFeaturedPosts());
+export default function BlogClientPage({ allPosts, featuredPosts }: Props) {
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>(allPosts ?? [])
 
   useEffect(() => {
-    // Animate page header
-    gsap.fromTo('.page-header',
+    gsap.fromTo(
+      '.page-header',
       { opacity: 0, y: -20 },
-      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
-    );
-  }, []);
+      { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
+    )
+  }, [])
 
   useEffect(() => {
-    let posts = blogPostsMetadata;
+    let posts = [...(allPosts ?? [])]
 
-    // Apply search filter
     if (searchQuery) {
-      posts = searchPosts(searchQuery);
+      posts = posts.filter((post) =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.summary?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     }
 
-    // Apply tag filters
     if (selectedTags.length > 0) {
-      posts = posts.filter(post => 
-        selectedTags.some(tag => 
-          post.tags.some(postTag => 
-            postTag.toLowerCase().includes(tag.toLowerCase())
+      posts = posts.filter((post) =>
+        selectedTags.some((tag) =>
+          post.tags?.some((postTag) =>
+            postTag.name.toLowerCase().includes(tag.toLowerCase())
           )
         )
-      );
+      )
     }
 
-    setFilteredPosts(posts);
-  }, [selectedTags, searchQuery]);
+    setFilteredPosts(posts)
+  }, [searchQuery, selectedTags, allPosts])
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -57,16 +61,16 @@ export default function Home() {
           Real-world solutions, battle-tested patterns, and hard-earned lessons from the trenches.
         </p>
       </header>
-      
+
       {/* Featured Posts */}
-      {featuredPosts.length > 0 && !searchQuery && selectedTags.length === 0 && (
+      {featuredPosts?.length > 0 && !searchQuery && selectedTags.length === 0 && (
         <div className="mb-12">
           <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
             <span className="text-green-400">★</span>
             Featured Posts
           </h2>
           <div className="space-y-6">
-            {featuredPosts.map((post, index) => (
+            {featuredPosts?.map((post: BlogPost, index: number) => (
               <BlogCard key={post.id} post={post} index={index} />
             ))}
           </div>
@@ -86,12 +90,15 @@ export default function Home() {
 
       {/* Blog Posts */}
       <div className="space-y-6">
-        {filteredPosts.length > 0 ? (
+        {filteredPosts?.length > 0 ? (
           filteredPosts
-            .filter(post => !(featuredPosts.includes(post) && !searchQuery && selectedTags.length === 0))
+            .filter(
+              (post) =>
+                !(featuredPosts?.includes(post) && !searchQuery && selectedTags.length === 0)
+            )
             .map((post, index) => (
-            <BlogCard key={post.id} post={post} index={index} />
-          ))
+              <BlogCard key={post.id} post={post} index={index} />
+            ))
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">
@@ -104,5 +111,5 @@ export default function Home() {
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CommentSection } from './comment-section';
 import { PostEngagement } from './post-engagement';
-import { BlogPost } from '@/lib/blog-data';
+import { BlogPost } from '@/types/types';
 import { gsap } from 'gsap';
 import { cn } from '@/lib/utils';
 import 'highlight.js/styles/github-dark.css';
@@ -98,11 +98,11 @@ export function BlogDetail({ post }: BlogDetailProps) {
           <Tag size={16} className="text-green-400" />
           {post.tags.map((tag) => (
             <Badge
-              key={tag}
+              key={tag.id}
               variant="secondary"
               className="bg-green-500/20 text-green-300 hover:bg-green-500/30 border-green-500/30"
             >
-              {tag}
+              {tag.name}
             </Badge>
           ))}
         </div>
@@ -153,47 +153,47 @@ export function BlogDetail({ post }: BlogDetailProps) {
               );
             },
 
-            pre: ({children}) => (
-        <pre className="bg-gray-900 border border-green-500/20 rounded-lg p-4 overflow-x-auto mb-6">
-          {children}
-        </pre>
-        ),
-        ul: ({children}) => (
-        <ul className="text-gray-300 mb-4 ml-6 space-y-2">
-          {children}
-        </ul>
-        ),
-        ol: ({children}) => (
-        <ol className="text-gray-300 mb-4 ml-6 space-y-2">
-          {children}
-        </ol>
-        ),
-        li: ({children}) => (
-        <li className="list-disc">
-          {children}
-        </li>
-        ),
-        blockquote: ({children}) => (
-        <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-300 mb-4">
-          {children}
-        </blockquote>
-        ),
-        strong: ({children}) => (
-        <strong className="text-white font-semibold">
-          {children}
-        </strong>
-        ),
+            pre: ({ children }) => (
+              <pre className="bg-gray-900 border border-green-500/20 rounded-lg p-4 overflow-x-auto mb-6">
+                {children}
+              </pre>
+            ),
+            ul: ({ children }) => (
+              <ul className="text-gray-300 mb-4 ml-6 space-y-2">
+                {children}
+              </ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="text-gray-300 mb-4 ml-6 space-y-2">
+                {children}
+              </ol>
+            ),
+            li: ({ children }) => (
+              <li className="list-disc">
+                {children}
+              </li>
+            ),
+            blockquote: ({ children }) => (
+              <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-300 mb-4">
+                {children}
+              </blockquote>
+            ),
+            strong: ({ children }) => (
+              <strong className="text-white font-semibold">
+                {children}
+              </strong>
+            ),
           }}
         >
-        {post.content}
-      </ReactMarkdown>
-    </div>
-      
-      {/* Engagement Section */ }
-  <PostEngagement post={post} />
+          {post.content}
+        </ReactMarkdown>
+      </div>
 
-  {/* Comments Section */ }
-  <CommentSection post={post} />
+      {/* Engagement Section */}
+      <PostEngagement post={post} />
+
+      {/* Comments Section */}
+      <CommentSection post={post} />
     </article >
   );
 }

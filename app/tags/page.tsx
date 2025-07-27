@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Tag, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getAllTags, getPostsByTag } from '@/lib/blog-data';
+import { getAllTags, getPostsByTag } from '@/lib/client-actions/blog-data';
 import { gsap } from 'gsap';
 
 export default function TagsPage() {
@@ -15,9 +15,9 @@ export default function TagsPage() {
     // Animate tag cards
     gsap.fromTo('.tag-card',
       { opacity: 0, y: 20, scale: 0.9 },
-      { 
-        opacity: 1, 
-        y: 0, 
+      {
+        opacity: 1,
+        y: 0,
         scale: 1,
         duration: 0.5,
         stagger: 0.1,
@@ -42,21 +42,21 @@ export default function TagsPage() {
         {allTags.map((tag) => {
           const postsCount = getPostsByTag(tag).length;
           return (
-            <Card 
+            <Card
               key={tag}
               className="tag-card group bg-black/40 backdrop-blur-sm border-green-500/20 hover:border-green-400/40 transition-all cursor-pointer hover:scale-105"
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <Badge 
+                  <Badge
                     variant="secondary"
                     className="bg-green-500/20 text-green-300 border-green-500/30"
                   >
                     {tag}
                   </Badge>
-                  <ArrowRight 
-                    size={18} 
-                    className="text-gray-400 group-hover:text-green-400 transition-colors" 
+                  <ArrowRight
+                    size={18}
+                    className="text-gray-400 group-hover:text-green-400 transition-colors"
                   />
                 </div>
               </CardHeader>

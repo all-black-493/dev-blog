@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { BlogDetail } from '@/components/blog/blog-detail';
-import { blogPostsMetadata, getBlogPostById } from '@/lib/blog-data';
+import { blogPostsMetadata, getBlogPostById } from '@/lib/client-actions/blog-data';
 
 interface BlogPageProps {
   params: {

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BlogPost, createPost, updatePost } from '@/lib/blog-data';
+import { BlogPost, createPost, updatePost } from '@/types/types';
 import { cn } from '@/lib/utils';
 
 interface PostEditorProps {
@@ -30,7 +30,7 @@ export function PostEditor({ post, mode }: PostEditorProps) {
     featured: post?.featured || false,
     status: post?.status || 'draft' as 'draft' | 'published'
   });
-  
+
   const [newTag, setNewTag] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,9 +64,9 @@ export function PostEditor({ post, mode }: PostEditorProps) {
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      tags: prev.tags.filter(tag => tag !== tagToRemove) 
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   };
 
@@ -78,9 +78,9 @@ export function PostEditor({ post, mode }: PostEditorProps) {
   };
 
   const removeKeyword = (keywordToRemove: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      keywords: prev.keywords.filter(keyword => keyword !== keywordToRemove) 
+    setFormData(prev => ({
+      ...prev,
+      keywords: prev.keywords.filter(keyword => keyword !== keywordToRemove)
     }));
   };
 
@@ -105,7 +105,7 @@ export function PostEditor({ post, mode }: PostEditorProps) {
             Close Preview
           </Button>
         </div>
-        
+
         <article className="prose prose-invert prose-green max-w-none">
           <h1 className="text-4xl font-bold text-white mb-4">{formData.title}</h1>
           <p className="text-gray-300 text-lg mb-6">{formData.summary}</p>
@@ -162,7 +162,7 @@ export function PostEditor({ post, mode }: PostEditorProps) {
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Summary *
@@ -188,7 +188,7 @@ export function PostEditor({ post, mode }: PostEditorProps) {
                   className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Read Time (min)
@@ -201,14 +201,14 @@ export function PostEditor({ post, mode }: PostEditorProps) {
                   min="1"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Status
                 </label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: 'draft' | 'published') => 
+                  onValueChange={(value: 'draft' | 'published') =>
                     setFormData(prev => ({ ...prev, status: value }))
                   }
                 >
@@ -268,11 +268,11 @@ export function PostEditor({ post, mode }: PostEditorProps) {
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map(tag => (
                   <Badge
-                    key={tag}
+                    key={tag.id}
                     className="bg-green-500/20 text-green-300 border-green-500/30 cursor-pointer hover:bg-red-500/20"
-                    onClick={() => removeTag(tag)}
+                    onClick={() => removeTag(tag.name)}
                   >
-                    {tag} <X size={12} className="ml-1" />
+                    {tag.name} <X size={12} className="ml-1" />
                   </Badge>
                 ))}
               </div>
