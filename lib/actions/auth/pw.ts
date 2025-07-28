@@ -21,5 +21,7 @@ export const loginUser = actionClient
       });
     }
 
+    await supabase.auth.refreshSession();
+
     return { success: "Logged in successfully." };
   });

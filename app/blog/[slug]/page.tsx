@@ -1,6 +1,7 @@
-import { notFound } from 'next/navigation';
-import { BlogDetail } from '@/components/blog/blog-detail';
-import { blogPostsMetadata, getBlogPostById } from '@/lib/client-actions/blog-data';
+import { notFound } from "next/navigation";
+import { BlogDetail } from "@/components/blog/blog-detail";
+import { getPost } from "@/lib/actions/posts/get-post";
+import { getBlogPostsMetadata } from "@/lib/actions/posts/get-post-metadata";
 
 interface BlogPageProps {
   params: {
@@ -8,18 +9,21 @@ interface BlogPageProps {
   };
 }
 
-export default function BlogPage({ params }: BlogPageProps) {
-  const post = getBlogPostById(params.slug);
+export default async function BlogPage({ params }: BlogPageProps) {
+  const result = await getPost({ postId: params.slug });
 
-  if (!post) {
+  if (!result || !result.data?.post) {
     notFound();
   }
 
-  return <BlogDetail post={post} />;
+  return <BlogDetail post={result.data?.post} />;
 }
 
-export function generateStaticParams() {
-  return blogPostsMetadata.map((post) => ({
+export async function generateStaticParams() {
+  const result = await getBlogPostsMetadata();
+  if (!result || !result.data?.metadata) return [];
+
+  return result.data.metadata.map((post) => ({
     slug: post.id,
   }));
 }

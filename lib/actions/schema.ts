@@ -41,6 +41,7 @@ export const toggleFeaturedSchema = z.object({
 export const addCommentSchema = z.object({
   postId: z.string().uuid(),
   content: z.string().min(1),
+  parentCommentId: z.string().uuid().optional(),
 })
 
 export const toggleCommentLikeSchema = z.object({

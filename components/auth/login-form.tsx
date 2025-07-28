@@ -11,8 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Mail, Lock, Zap } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -22,6 +24,9 @@ export function LoginForm() {
     e.preventDefault();
     login({ email, password });
     console.log(loginResult.data)
+    if(loginResult.data?.success){
+      router.push("/")
+    }
   };
 
   const handleMagicLink = async (e: React.FormEvent) => {

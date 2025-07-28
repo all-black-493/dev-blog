@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Tag, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getAllTags, getPostsByTag } from '@/lib/client-actions/blog-data';
+import { getAllTags, getPostsByTag } from '@/lib/client-actions/blog';
 import { gsap } from 'gsap';
 
 export default function TagsPage() {

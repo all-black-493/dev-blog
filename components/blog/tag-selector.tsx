@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getAllTags } from '@/lib/client-actions/blog-data';
+import { getAllTags } from '@/lib/client-actions/blog';
 import { gsap } from 'gsap';
 import { cn } from '@/lib/utils';
 
@@ -27,14 +27,13 @@ export function TagSelector({
   useEffect(() => {
     async function loadTags() {
       const tags = await getAllTags();
-      setAllTags(tags || []);
+      setAllTags(tags);
     }
 
     loadTags();
   }, []);
 
   useEffect(() => {
-    // Animate tag cloud
     gsap.fromTo('.tag-item',
       { opacity: 0, scale: 0.8 },
       {

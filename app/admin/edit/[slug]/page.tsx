@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { PostEditor } from '@/components/blog/post-editor';
-import { getBlogPostById, blogPostsMetadata } from '@/lib/client-actions/blog-data';
+import { getBlogPostById, blogPostsMetadata } from '@/lib/client-actions/blog';
 
 interface EditPostPageProps {
   params: {

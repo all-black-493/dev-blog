@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { BlogPost, likePost, dislikePost } from '@/lib/client-actions/blog-data';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BlogPost } from "@/types/types";
+import { cn } from "@/lib/utils";
+import { useAction } from "next-safe-action/hooks";
+import { likePost } from "@/lib/actions/posts/like-post";
+import { dislikePost } from "@/lib/actions/posts/dislike-post";
 
 interface PostEngagementProps {
   post: BlogPost;
@@ -13,42 +16,67 @@ interface PostEngagementProps {
 export function PostEngagement({ post }: PostEngagementProps) {
   const [likes, setLikes] = useState(post.likes);
   const [dislikes, setDislikes] = useState(post.dislikes);
-  const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(null);
+  const [userAction, setUserAction] = useState<"like" | "dislike" | null>(null);
 
-  const handleLike = async () => {
-    if (userAction === 'like') return;
+  const { execute: likePostExecute, status: likeStatus } = useAction(likePost, {
+    onSuccess: (res) => {
+      if ("error" in res || "_errors" in res) {
+        setLikes((prev) => prev - 1);
+        setUserAction(null);
+        console.error("Failed to like post:", res);
+      }
+    },
+  });
 
-    if (userAction === 'dislike') {
-      setDislikes(prev => prev - 1);
+  const { execute: dislikePostExecute, status: dislikeStatus } = useAction(dislikePost, {
+    onSuccess: (res) => {
+      if ("error" in res || "_errors" in res) {
+        setDislikes((prev) => prev - 1);
+        setUserAction(null);
+        console.error("Failed to dislike post:", res);
+      }
+    },
+  });
+
+  const handleLike = () => {
+    if (userAction === "like" || likeStatus === "executing") return;
+
+    if (userAction === "dislike") {
+      setDislikes((prev) => prev - 1);
     }
 
-    setLikes(prev => prev + 1);
-    setUserAction('like');
-    await likePost(post.id);
+    setLikes((prev) => prev + 1);
+    setUserAction("like");
+
+    likePostExecute({ postId: post.id });
   };
 
-  const handleDislike = async () => {
-    if (userAction === 'dislike') return;
+  const handleDislike = () => {
+    if (userAction === "dislike" || dislikeStatus === "executing") return;
 
-    if (userAction === 'like') {
-      setLikes(prev => prev - 1);
+    if (userAction === "like") {
+      setLikes((prev) => prev - 1);
     }
 
-    setDislikes(prev => prev + 1);
-    setUserAction('dislike');
-    await dislikePost(post.id);
+    setDislikes((prev) => prev + 1);
+    setUserAction("dislike");
+
+    dislikePostExecute({ postId: post.id });
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: post.title,
-        text: post.summary,
-        url: window.location.href,
-      });
-    } else {
-      await navigator.clipboard.writeText(window.location.href);
-      // You could show a toast notification here
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: post.title,
+          text: post.summary,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+      }
+    } catch (err) {
+      console.error("Share failed", err);
     }
   };
 
@@ -60,9 +88,10 @@ export function PostEngagement({ post }: PostEngagementProps) {
             variant="ghost"
             size="sm"
             onClick={handleLike}
+            disabled={likeStatus === "executing"}
             className={cn(
               "flex items-center gap-2 hover:bg-green-500/10",
-              userAction === 'like' && "text-green-400 bg-green-500/20"
+              userAction === "like" && "text-green-400 bg-green-500/20"
             )}
           >
             <ThumbsUp size={18} />
@@ -73,9 +102,10 @@ export function PostEngagement({ post }: PostEngagementProps) {
             variant="ghost"
             size="sm"
             onClick={handleDislike}
+            disabled={dislikeStatus === "executing"}
             className={cn(
               "flex items-center gap-2 hover:bg-red-500/10",
-              userAction === 'dislike' && "text-red-400 bg-red-500/20"
+              userAction === "dislike" && "text-red-400 bg-red-500/20"
             )}
           >
             <ThumbsDown size={18} />

@@ -10,15 +10,26 @@ export interface BlogPost {
   dislikes: number
   tags: { id: number; name: string }[]
   keywords: string[]
-  comments: Comment[]
+  comments: ThreadedComment[]
   featured: boolean
   status: 'published' | 'draft'
 }
 
-export interface Comment {
-  id: string
-  author: string
-  content: string | null
-  date: string
-  likes?: number | null
+export interface CommentAuthor {
+  id: string;
+  username: string;
+  avatar_url: string | null;
 }
+
+export interface ThreadedComment {
+  id: string;
+  author: string;
+  content: string | null;
+  created_at: string;
+  likes: number | null;
+  blog_post_id: string | null;
+  parent_comment_id: string | null;
+  profile: CommentAuthor;
+  replies: ThreadedComment[];
+}
+

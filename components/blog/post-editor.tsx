@@ -1,119 +1,143 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Save, Eye, X, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BlogPost, createPost, updatePost } from '@/types/types';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Save, Eye, X, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { BlogPost } from "@/types/types";
+import { useAction } from "next-safe-action/hooks";
+import { createPost } from "@/lib/actions/posts/create-post";
+import { editPost } from "@/lib/actions/posts/edit-post";
 
 interface PostEditorProps {
   post?: BlogPost;
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
 }
+
+type EditorData = {
+  title: string;
+  summary: string;
+  content: string;
+  tags: string[];
+  keywords: string[];
+  author: string;
+  readTime: number;
+  featured: boolean;
+  status: "draft" | "published";
+};
 
 export function PostEditor({ post, mode }: PostEditorProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    title: post?.title || '',
-    summary: post?.summary || '',
-    content: post?.content || '',
-    tags: post?.tags || [],
+  const [formData, setFormData] = useState<EditorData>({
+    title: post?.title || "",
+    summary: post?.summary || "",
+    content: post?.content || "",
+    tags: post?.tags?.map((t) => t.name) || [],
     keywords: post?.keywords || [],
-    author: post?.author || 'Senior Developer',
+    author: post?.author || "",
     readTime: post?.readTime || 5,
     featured: post?.featured || false,
-    status: post?.status || 'draft' as 'draft' | 'published'
+    status: post?.status || "draft",
   });
-
-  const [newTag, setNewTag] = useState('');
-  const [newKeyword, setNewKeyword] = useState('');
+  const [newTag, setNewTag] = useState("");
+  const [newKeyword, setNewKeyword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Auto-calc read time
+  useEffect(() => {
+    const words = formData.content.trim().split(/\s+/).length;
+    setFormData((f) => ({
+      ...f,
+      readTime: Math.max(1, Math.ceil(words / 200)),
+    }));
+  }, [formData.content]);
+
+  // Server actions
+  const { execute: doCreate } = useAction(createPost, {
+    onSuccess: () => router.push("/"),
+    onError: () => setError("Failed to create post"),
+  });
+  const { execute: doEdit } = useAction(editPost, {
+    onSuccess: () => router.push(`/blog/${post!.id}`),
+    onError: () => setError("Failed to update post"),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.content) return;
-
+    setError(null);
     setIsSubmitting(true);
-    try {
-      if (mode === 'create') {
-        await createPost(formData);
-        router.push('/');
-      } else if (post) {
-        await updatePost(post.id, formData);
-        router.push(`/blog/${post.id}`);
-      }
-    } catch (error) {
-      console.error('Failed to save post:', error);
-    } finally {
-      setIsSubmitting(false);
+
+    const payload = {
+      title: formData.title,
+      summary: formData.summary,
+      content: formData.content,
+      tags: formData.tags,
+      keywords: formData.keywords,
+      featured: formData.featured,
+      status: formData.status,
+    };
+
+    if (mode === "create") {
+      doCreate(payload);
+    } else {
+      doEdit({ postId: post!.id, ...payload });
     }
   };
 
   const addTag = () => {
     if (newTag && !formData.tags.includes(newTag)) {
-      setFormData(prev => ({ ...prev, tags: [...prev.tags, newTag] }));
-      setNewTag('');
+      setFormData((f) => ({ ...f, tags: [...f.tags, newTag] }));
+      setNewTag("");
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
+  const removeTag = (tag: string) =>
+    setFormData((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }));
 
   const addKeyword = () => {
     if (newKeyword && !formData.keywords.includes(newKeyword)) {
-      setFormData(prev => ({ ...prev, keywords: [...prev.keywords, newKeyword] }));
-      setNewKeyword('');
+      setFormData((f) => ({
+        ...f,
+        keywords: [...f.keywords, newKeyword],
+      }));
+      setNewKeyword("");
     }
   };
 
-  const removeKeyword = (keywordToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      keywords: prev.keywords.filter(keyword => keyword !== keywordToRemove)
+  const removeKeyword = (kw: string) =>
+    setFormData((f) => ({
+      ...f,
+      keywords: f.keywords.filter((k) => k !== kw),
     }));
-  };
-
-  // Auto-calculate read time based on content length
-  useEffect(() => {
-    const wordCount = formData.content.split(/\s+/).length;
-    const readTime = Math.max(1, Math.ceil(wordCount / 200)); // 200 words per minute
-    setFormData(prev => ({ ...prev, readTime }));
-  }, [formData.content]);
 
   if (preview) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Preview</h1>
-          <Button
-            onClick={() => setPreview(false)}
-            variant="outline"
-            className="border-green-500/30 text-green-300 hover:bg-green-500/10"
-          >
-            <X size={16} className="mr-2" />
-            Close Preview
+        <div className="flex justify-between mb-8">
+          <h1 className="text-3xl text-white font-bold">Preview</h1>
+          <Button variant="outline" onClick={() => setPreview(false)}>
+            <X size={16} /> Close
           </Button>
         </div>
-
-        <article className="prose prose-invert prose-green max-w-none">
-          <h1 className="text-4xl font-bold text-white mb-4">{formData.title}</h1>
-          <p className="text-gray-300 text-lg mb-6">{formData.summary}</p>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {formData.tags.map(tag => (
-              <Badge key={tag} className="bg-green-500/20 text-green-300">
-                {tag}
-              </Badge>
+        <article className="prose prose-invert prose-green">
+          <h1 className="text-4xl text-white mb-2">{formData.title}</h1>
+          <p className="text-gray-300 mb-4">{formData.summary}</p>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {formData.tags.map((t) => (
+              <Badge key={t}>{t}</Badge>
             ))}
           </div>
           <div className="whitespace-pre-wrap text-gray-300">
@@ -125,211 +149,190 @@ export function PostEditor({ post, mode }: PostEditorProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">
-          {mode === 'create' ? 'Create New Post' : 'Edit Post'}
+    <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl text-white font-bold">
+          {mode === "create" ? "Create Post" : "Edit Post"}
         </h1>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={() => setPreview(true)}
-            variant="outline"
-            className="border-green-500/30 text-green-300 hover:bg-green-500/10"
-          >
-            <Eye size={16} className="mr-2" />
-            Preview
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => setPreview(true)}>
+          <Eye size={16} /> Preview
+        </Button>
       </div>
 
+      {error && <p className="text-red-500">{error}</p>}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+        {/* Basic Info */}
         <Card className="bg-black/40 backdrop-blur-sm border-green-500/20">
           <CardHeader>
-            <h2 className="text-xl font-semibold text-white">Basic Information</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Basic Information
+            </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-1">
                 Title *
               </label>
               <Input
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
-                placeholder="Enter post title..."
                 required
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, title: e.target.value }))
+                }
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-1">
                 Summary *
               </label>
               <Textarea
-                value={formData.summary}
-                onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
-                className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
-                placeholder="Brief summary of the post..."
-                rows={3}
                 required
+                rows={3}
+                value={formData.summary}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, summary: e.target.value }))
+                }
               />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm text-gray-300 mb-1">
                   Author
                 </label>
                 <Input
                   value={formData.author}
-                  onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
-                  className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
+                  onChange={(e) =>
+                    setFormData((f) => ({ ...f, author: e.target.value }))
+                  }
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Read Time (min)
+                <label className="block text-sm text-gray-300 mb-1">
+                  Read Time
                 </label>
                 <Input
                   type="number"
+                  min={1}
                   value={formData.readTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, readTime: parseInt(e.target.value) || 5 }))}
-                  className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
-                  min="1"
+                  onChange={(e) =>
+                    setFormData((f) => ({
+                      ...f,
+                      readTime: +e.target.value || 1,
+                    }))
+                  }
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm text-gray-300 mb-1">
                   Status
                 </label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value: 'draft' | 'published') =>
-                    setFormData(prev => ({ ...prev, status: value }))
+                  onValueChange={(v: "draft" | "published") =>
+                    setFormData((f) => ({ ...f, status: v }))
                   }
                 >
-                  <SelectTrigger className="bg-black/60 border-green-500/30 text-white focus:border-green-400">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-black border-green-500/30">
+                  <SelectContent>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
-                id="featured"
                 checked={formData.featured}
-                onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
-                className="rounded border-green-500/30 bg-black/60 text-green-500 focus:ring-green-500"
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, featured: e.target.checked }))
+                }
               />
-              <label htmlFor="featured" className="text-sm text-gray-300">
-                Featured Post
-              </label>
+              <label className="text-sm text-gray-300">Featured</label>
             </div>
           </CardContent>
         </Card>
 
-        {/* Tags and Keywords */}
+        {/* Tags & Keywords */}
         <Card className="bg-black/40 backdrop-blur-sm border-green-500/20">
           <CardHeader>
-            <h2 className="text-xl font-semibold text-white">Tags & Keywords</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Tags & Keywords
+            </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Tags
-              </label>
+              <label className="block text-sm text-gray-300 mb-1">Tags</label>
               <div className="flex gap-2 mb-2">
                 <Input
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
-                  placeholder="Add a tag..."
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && (e.preventDefault(), addTag())
+                  }
                 />
-                <Button
-                  type="button"
-                  onClick={addTag}
-                  variant="outline"
-                  className="border-green-500/30 text-green-300 hover:bg-green-500/10"
-                >
+                <Button onClick={addTag} variant="outline">
                   <Plus size={16} />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {formData.tags.map(tag => (
+                {formData.tags.map((t) => (
                   <Badge
-                    key={tag.id}
-                    className="bg-green-500/20 text-green-300 border-green-500/30 cursor-pointer hover:bg-red-500/20"
-                    onClick={() => removeTag(tag.name)}
+                    key={t}
+                    className="cursor-pointer"
+                    onClick={() => removeTag(t)}
                   >
-                    {tag.name} <X size={12} className="ml-1" />
+                    {t} <X size={12} />
                   </Badge>
                 ))}
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Keywords (for SEO)
+              <label className="block text-sm text-gray-300 mb-1">
+                Keywords
               </label>
               <div className="flex gap-2 mb-2">
                 <Input
                   value={newKeyword}
                   onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
-                  className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400"
-                  placeholder="Add a keyword..."
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && (e.preventDefault(), addKeyword())
+                  }
                 />
-                <Button
-                  type="button"
-                  onClick={addKeyword}
-                  variant="outline"
-                  className="border-green-500/30 text-green-300 hover:bg-green-500/10"
-                >
+                <Button onClick={addKeyword} variant="outline">
                   <Plus size={16} />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {formData.keywords.map(keyword => (
+                {formData.keywords.map((k) => (
                   <Badge
-                    key={keyword}
-                    variant="outline"
-                    className="bg-green-500/10 text-green-400 border-green-500/30 cursor-pointer hover:bg-red-500/20"
-                    onClick={() => removeKeyword(keyword)}
+                    key={k}
+                    className="cursor-pointer"
+                    onClick={() => removeKeyword(k)}
                   >
-                    {keyword} <X size={12} className="ml-1" />
+                    {k} <X size={12} />
                   </Badge>
                 ))}
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
         </Card>
 
         {/* Content */}
         <Card className="bg-black/40 backdrop-blur-sm border-green-500/20">
           <CardHeader>
-            <h2 className="text-xl font-semibold text-white">Content *</h2>
-            <p className="text-sm text-gray-400">
-              Supports Markdown formatting. Use ``` for code blocks.
-            </p>
+            <h2 className="text-xl font-semibold text-white">Content</h2>
           </CardHeader>
           <CardContent>
             <Textarea
+              rows={12}
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-              className="bg-black/60 border-green-500/30 text-white placeholder-gray-400 focus:border-green-400 font-mono"
-              placeholder="Write your post content here..."
-              rows={20}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, content: e.target.value }))
+              }
+              className="font-mono"
               required
             />
           </CardContent>
@@ -337,24 +340,206 @@ export function PostEditor({ post, mode }: PostEditorProps) {
 
         {/* Submit */}
         <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            className="border-gray-500/30 text-gray-300 hover:bg-gray-500/10"
-          >
+          <Button variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-green-600 text-white"
           >
             <Save size={16} className="mr-2" />
-            {isSubmitting ? 'Saving...' : (mode === 'create' ? 'Create Post' : 'Update Post')}
+            {isSubmitting
+              ? "Saving..."
+              : mode === "create"
+              ? "Create Post"
+              : "Update Post"}
           </Button>
         </div>
       </form>
     </div>
   );
 }
+
+
+interface BasicInfoProps {
+  data: typeof PostEditor.prototype["formData"];
+  setData: React.Dispatch<React.SetStateAction<typeof PostEditor.prototype["formData"]>>;
+}
+
+{/* function BasicInfoSection({ data, setData }: BasicInfoProps) {
+  return (
+    <Card className="bg-black/40 border-green-500/20">
+      <CardHeader>
+        <h2 className="text-xl text-white">Basic Information</h2>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="text-gray-300">Title *</label>
+          <Input
+            required
+            value={data.title}
+            onChange={(e) => setData((d) => ({ ...d, title: e.target.value }))}
+          />
+        </div>
+        <div>
+          <label className="text-gray-300">Summary *</label>
+          <Textarea
+            required
+            rows={3}
+            value={data.summary}
+            onChange={(e) => setData((d) => ({ ...d, summary: e.target.value }))}
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="text-gray-300">Author</label>
+            <Input
+              value={data.author}
+              onChange={(e) => setData((d) => ({ ...d, author: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-gray-300">Read Time</label>
+            <Input
+              type="number"
+              min={1}
+              value={data.readTime}
+              onChange={(e) =>
+                setData((d) => ({ ...d, readTime: +e.target.value || 1 }))
+              }
+            />
+          </div>
+          <div>
+            <label className="text-gray-300">Status</label>
+            <Select
+              value={data.status}
+              onValueChange={(v: "draft" | "published") =>
+                setData((d) => ({ ...d, status: v }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={data.featured}
+            onChange={(e) => setData((d) => ({ ...d, featured: e.target.checked }))}
+          />
+          <label className="text-gray-300">Featured</label>
+        </div>
+      </CardContent>
+    </Card>
+  );
+} */}
+
+interface TagsKeywordsProps {
+  tags: string[];
+  newTag: string;
+  setNewTag: (t: string) => void;
+  addTag: () => void;
+  removeTag: (t: string) => void;
+  keywords: string[];
+  newKeyword: string;
+  setNewKeyword: (k: string) => void;
+  addKeyword: () => void;
+  removeKeyword: (k: string) => void;
+}
+
+{/* function TagsKeywordsSection({
+  tags,
+  newTag,
+  setNewTag,
+  addTag,
+  removeTag,
+  keywords,
+  newKeyword,
+  setNewKeyword,
+  addKeyword,
+  removeKeyword,
+}: TagsKeywordsProps) {
+  return (
+    <Card className="bg-black/40 border-green-500/20">
+      <CardHeader>
+        <h2 className="text-xl text-white">Tags & Keywords</h2>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="text-gray-300">Tags</label>
+          <div className="flex gap-2 mb-2">
+            <Input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+            />
+            <Button onClick={addTag} variant="outline">
+              <Plus size={16} />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((t) => (
+              <Badge key={t} onClick={() => removeTag(t)}>
+                {t} <X size={12} />
+              </Badge>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-gray-300">Keywords</label>
+          <div className="flex gap-2 mb-2">
+            <Input
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              onKeyPress={(e) =>
+                e.key === "Enter" && (e.preventDefault(), addKeyword())
+              }
+            />
+            <Button onClick={addKeyword} variant="outline">
+              <Plus size={16} />
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((k) => (
+              <Badge key={k} onClick={() => removeKeyword(k)}>
+                {k} <X size={12} />
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+} */}
+
+interface ContentEditorProps {
+  content: string;
+  setContent: (c: string) => void;
+}
+
+{/* function ContentEditor({ content, setContent }: ContentEditorProps) {
+  return (
+    <Card className="bg-black/40 border-green-500/20">
+      <CardHeader>
+        <h2 className="text-xl text-white">Content *</h2>
+      </CardHeader>
+      <CardContent>
+        <Textarea
+          rows={12}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="bg-black/60 border-green-500/30 text-white font-mono"
+          placeholder="Write Markdown content..."
+          required
+        />
+      </CardContent>
+    </Card>
+  );
+} */}

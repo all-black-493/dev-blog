@@ -28,9 +28,24 @@ export const addComment = actionClient
         content: parsedInput.content,
         author: user.id,
         created_at: new Date().toISOString(),
+        parent_comment_id: parsedInput.parentCommentId ?? null,
       })
-      .select()
+      .select(`
+    id,
+    content,
+    created_at,
+    likes,
+    author,
+    profile:author (
+      id,
+      username,
+      avatar_url
+    ),
+    parent_comment_id(id),
+    blog_post_id
+  `)
       .single();
+
 
     if (error) return { error: error.message };
 
