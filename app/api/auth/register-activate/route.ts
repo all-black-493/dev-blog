@@ -45,7 +45,6 @@ export async function POST(req: Request) {
 
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
     user_metadata: { role: profile.role },  
-    app_metadata: { role: profile.role }
   })
 
   

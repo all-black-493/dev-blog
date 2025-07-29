@@ -290,6 +290,7 @@ export function PostEditor({ post, mode }: PostEditorProps) {
                 ))}
               </div>
             </div>
+
             <div>
               <label className="block text-sm text-gray-300 mb-1">
                 Keywords
@@ -317,7 +318,8 @@ export function PostEditor({ post, mode }: PostEditorProps) {
                   </Badge>
                 ))}
               </div>
-            </CardContent>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Content */}
@@ -352,8 +354,8 @@ export function PostEditor({ post, mode }: PostEditorProps) {
             {isSubmitting
               ? "Saving..."
               : mode === "create"
-              ? "Create Post"
-              : "Update Post"}
+                ? "Create Post"
+                : "Update Post"}
           </Button>
         </div>
       </form>

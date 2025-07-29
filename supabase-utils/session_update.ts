@@ -29,10 +29,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  const role = claims?.app_metadata?.role || 
-               user?.app_metadata?.role || 
-               claims?.user_metadata?.role || 
-               user?.user_metadata?.role
+  const role = claims?.user_metadata?.role || user?.user_metadata?.role
   
   console.log("Resolved role:", role)
 
@@ -48,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/auth') && user) {
+  if (pathname.startsWith('/auth/register') && user) {
     return redirectToHome(request)
   }
 

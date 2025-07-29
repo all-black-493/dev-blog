@@ -21,7 +21,7 @@ export function Sidebar() {
 
     supabase.auth.getUser().then(({ data, error }) => {
       if (!error && data?.user) {
-        const role = data.user.app_metadata?.role;
+        const role = data.user.user_metadata?.role;
         console.log("Sidebar Role: ", role)
         setUserRole(role);
       }
